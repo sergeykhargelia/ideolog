@@ -59,7 +59,7 @@ object DefaultSettingsStoreItems {
 
   val Error = LogHighlightingPattern(
     true,
-    "^\\s*e(rror)?\\s*$",
+    "\\s+(?i)error\\s+",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color.RED.rgb,
     null,
@@ -69,7 +69,7 @@ object DefaultSettingsStoreItems {
   )
   val Warning = LogHighlightingPattern(
     true,
-    "^\\s*w(arn(ing)?)?\\s*$",
+    "\\s+(?i)warn(ing)?\\s+",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0xff, 0xaa, 0).rgb,
     null,
@@ -79,7 +79,7 @@ object DefaultSettingsStoreItems {
   )
   val Info = LogHighlightingPattern(
     true,
-    "^\\s*i(nfo)?\\s*$",
+    "\\s+(?i)info\\s+",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0x3f, 0xbf, 0x3f).rgb,
     null,
@@ -95,7 +95,7 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
     fun getInstance() = getService<LogHighlightingSettingsStore>()
     val logger = Logger.getInstance("LogHighlightingSettingsStore")
 
-    const val CURRENT_SETTINGS_VERSION = "5"
+    const val CURRENT_SETTINGS_VERSION = "6"
 
     val cleanState = State(arrayListOf(
       DefaultSettingsStoreItems.Error,
@@ -156,6 +156,22 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
 
         newState.version = "5"
 
+        return@lambda newState
+      },
+      "5" to lambda@{ oldState ->
+        val newState = oldState.clone()
+
+        if (newState.patterns.size >= 3 && newState.patterns[0].pattern == "^\\s*w(arn(ing)?)?\\s*\$") {
+          newState.patterns[0] = newState.patterns[0].copy(pattern = "\\s+(?i)error\\s+")
+        }
+        if (newState.patterns.size >= 3 && newState.patterns[1].pattern == "^\\s*w(arn(ing)?)?\\s*\$") {
+          newState.patterns[1] = newState.patterns[1].copy(pattern = "\\s+(?i)warn(ing)?\\s+")
+        }
+        if (newState.patterns.size >= 3 && newState.patterns[2].pattern == "^\\s*i(nfo)?\\s*\$") {
+          newState.patterns[2] = newState.patterns[2].copy(pattern = "\\s+(?i)info\\s+")
+        }
+
+        newState.version = "6"
         return@lambda newState
       }
     )
