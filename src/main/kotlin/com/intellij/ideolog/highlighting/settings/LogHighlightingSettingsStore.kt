@@ -19,7 +19,7 @@ import kotlin.collections.HashSet
 
 object DefaultSettingsStoreItems {
   val PipeSeparated = LogParsingPattern(
-    true,
+    false,
     "Pipe-separated",
     "^(?s)([^|]*)\\|([^|]*)\\|([^|]*)\\|(.*)$",
     "HH:mm:ss.SSS",
@@ -31,7 +31,7 @@ object DefaultSettingsStoreItems {
     UUID.fromString("b5772998-bf1e-4d9d-ab41-da0b86451163")
   )
   val IntelliJIDEA = LogParsingPattern(
-    true,
+    false,
     "IntelliJ IDEA",
     "^([^\\[]+)(\\[[\\s\\d]+])\\s*(\\w*)\\s*-\\s*(\\S*)\\s*-(.+)$",
     "yyyy-MM-dd HH:mm:ss,SSS",
@@ -43,7 +43,7 @@ object DefaultSettingsStoreItems {
     UUID.fromString("8a0e8992-94cb-4f4c-8be2-42b03609626b")
   )
   val TeamCityBuildLog = LogParsingPattern(
-    true,
+    false,
     "TeamCity build log",
     "^\\[([^]]+)](.):\\s*(\\[[^]]+])?(.*)$",
     "HH:mm:ss",
@@ -53,6 +53,18 @@ object DefaultSettingsStoreItems {
     2,
     false,
     UUID.fromString("e9fa2755-8390-42f5-a41e-a909c58c8cf9")
+  )
+  val All = LogParsingPattern(
+    true,
+    "All",
+    ".*",
+    "",
+    "",
+    -1,
+    -1,
+    -1,
+    false,
+    UUID.fromString("db0779ce-9fd3-11ec-b909-0242ac120002")
   )
   val ParsingPatterns = listOf(PipeSeparated, IntelliJIDEA, TeamCityBuildLog)
   val ParsingPatternsUUIDs = ParsingPatterns.map { it.uuid }
@@ -95,7 +107,7 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
     fun getInstance() = getService<LogHighlightingSettingsStore>()
     val logger = Logger.getInstance("LogHighlightingSettingsStore")
 
-    const val CURRENT_SETTINGS_VERSION = "6"
+    const val CURRENT_SETTINGS_VERSION = "7"
 
     val cleanState = State(arrayListOf(
       DefaultSettingsStoreItems.Error,
@@ -104,7 +116,8 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
     ), arrayListOf(), arrayListOf(
       DefaultSettingsStoreItems.PipeSeparated,
       DefaultSettingsStoreItems.IntelliJIDEA,
-      DefaultSettingsStoreItems.TeamCityBuildLog
+      DefaultSettingsStoreItems.TeamCityBuildLog,
+      DefaultSettingsStoreItems.All
     ), CURRENT_SETTINGS_VERSION, DefaultSettingsStoreItems.ParsingPatternsUUIDs.map { it.toString() }.joinToString(",") { it }, "heatmap", "16", true)
 
     val settingsUpgraders = mapOf<String, (State) -> State>(
@@ -172,6 +185,22 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
         }
 
         newState.version = "6"
+        return@lambda newState
+      },
+      "6" to lambda@{ oldState ->
+        val newState = oldState.clone()
+
+        if (newState.parsingPatterns.size == 3) {
+          newState.parsingPatterns[0] = newState.parsingPatterns[0].copy(enabled = false)
+          newState.parsingPatterns[1] = newState.parsingPatterns[1].copy(enabled = false)
+          newState.parsingPatterns[2] = newState.parsingPatterns[2].copy(enabled = false)
+          newState.parsingPatterns.add(DefaultSettingsStoreItems.All)
+        }
+
+        newState.lastAddedDefaultFormat =
+          DefaultSettingsStoreItems.ParsingPatternsUUIDs.map { it.toString() }.joinToString(",") { it }
+
+        newState.version = "7"
         return@lambda newState
       }
     )
