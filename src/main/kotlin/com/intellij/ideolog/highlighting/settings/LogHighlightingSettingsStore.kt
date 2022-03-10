@@ -66,12 +66,12 @@ object DefaultSettingsStoreItems {
     false,
     UUID.fromString("db0779ce-9fd3-11ec-b909-0242ac120002")
   )
-  val ParsingPatterns = listOf(PipeSeparated, IntelliJIDEA, TeamCityBuildLog)
+  val ParsingPatterns = listOf(PipeSeparated, IntelliJIDEA, TeamCityBuildLog, All)
   val ParsingPatternsUUIDs = ParsingPatterns.map { it.uuid }
 
   val Error = LogHighlightingPattern(
     true,
-    "\\s+(?i)error\\s+",
+    "(?i)error",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color.RED.rgb,
     null,
@@ -81,7 +81,7 @@ object DefaultSettingsStoreItems {
   )
   val Warning = LogHighlightingPattern(
     true,
-    "\\s+(?i)warn(ing)?\\s+",
+    "(?i)warn(ing)?",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0xff, 0xaa, 0).rgb,
     null,
@@ -91,7 +91,7 @@ object DefaultSettingsStoreItems {
   )
   val Info = LogHighlightingPattern(
     true,
-    "\\s+(?i)info\\s+",
+    "(?i)info",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0x3f, 0xbf, 0x3f).rgb,
     null,
@@ -175,13 +175,13 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
         val newState = oldState.clone()
 
         if (newState.patterns.size >= 3 && newState.patterns[0].pattern == "^\\s*w(arn(ing)?)?\\s*\$") {
-          newState.patterns[0] = newState.patterns[0].copy(pattern = "\\s+(?i)error\\s+")
+          newState.patterns[0] = newState.patterns[0].copy(pattern = "(?i)error")
         }
         if (newState.patterns.size >= 3 && newState.patterns[1].pattern == "^\\s*w(arn(ing)?)?\\s*\$") {
-          newState.patterns[1] = newState.patterns[1].copy(pattern = "\\s+(?i)warn(ing)?\\s+")
+          newState.patterns[1] = newState.patterns[1].copy(pattern = "(?i)warn(ing)?")
         }
         if (newState.patterns.size >= 3 && newState.patterns[2].pattern == "^\\s*i(nfo)?\\s*\$") {
-          newState.patterns[2] = newState.patterns[2].copy(pattern = "\\s+(?i)info\\s+")
+          newState.patterns[2] = newState.patterns[2].copy(pattern = "(?i)info")
         }
 
         newState.version = "6"
