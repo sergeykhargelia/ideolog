@@ -79,16 +79,6 @@ object DefaultSettingsStoreItems {
     italic = false,
     showOnStripe = true
   )
-  val CommonError = LogHighlightingPattern(
-    true,
-    "(\\s|^)(?i)error(\\s|\$)",
-    LogHighlightingAction.HIGHLIGHT_LINE,
-    Color.RED.rgb,
-    null,
-    bold = true,
-    italic = false,
-    showOnStripe = true
-  )
   val Warning = LogHighlightingPattern(
     true,
     "^\\s*w(arn(ing)?)?\\s*$",
@@ -99,29 +89,9 @@ object DefaultSettingsStoreItems {
     italic = false,
     showOnStripe = false
   )
-  val CommonWarning = LogHighlightingPattern(
-    true,
-    "(\\s|^)(?i)warn(ing)?(\\s|\$)",
-    LogHighlightingAction.HIGHLIGHT_LINE,
-    Color(0xff, 0xaa, 0).rgb,
-    null,
-    bold = true,
-    italic = false,
-    showOnStripe = false
-  )
   val Info = LogHighlightingPattern(
     true,
     "^\\s*i(nfo)?\\s*\$",
-    LogHighlightingAction.HIGHLIGHT_LINE,
-    Color(0x3f, 0xbf, 0x3f).rgb,
-    null,
-    bold = false,
-    italic = false,
-    showOnStripe = false
-  )
-  val CommonInfo = LogHighlightingPattern(
-    true,
-    "(\\s|^)(?i)info(\\s|\$)",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0x3f, 0xbf, 0x3f).rgb,
     null,
@@ -143,9 +113,6 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
       DefaultSettingsStoreItems.Error,
       DefaultSettingsStoreItems.Warning,
       DefaultSettingsStoreItems.Info,
-      DefaultSettingsStoreItems.CommonError,
-      DefaultSettingsStoreItems.CommonWarning,
-      DefaultSettingsStoreItems.CommonInfo
     ), arrayListOf(), arrayListOf(
       DefaultSettingsStoreItems.PipeSeparated,
       DefaultSettingsStoreItems.IntelliJIDEA,
@@ -206,14 +173,6 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
       },
       "5" to lambda@{ oldState ->
         val newState = oldState.clone()
-
-        if (newState.patterns.size == 3) {
-          newState.patterns.addAll(arrayListOf(
-            DefaultSettingsStoreItems.CommonError,
-            DefaultSettingsStoreItems.CommonWarning,
-            DefaultSettingsStoreItems.CommonInfo)
-          )
-        }
 
         if (newState.parsingPatterns.size == 3) {
           newState.parsingPatterns.add(DefaultSettingsStoreItems.All)
