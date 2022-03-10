@@ -19,7 +19,7 @@ import kotlin.collections.HashSet
 
 object DefaultSettingsStoreItems {
   val PipeSeparated = LogParsingPattern(
-    false,
+    true,
     "Pipe-separated",
     "^(?s)([^|]*)\\|([^|]*)\\|([^|]*)\\|(.*)$",
     "HH:mm:ss.SSS",
@@ -31,7 +31,7 @@ object DefaultSettingsStoreItems {
     UUID.fromString("b5772998-bf1e-4d9d-ab41-da0b86451163")
   )
   val IntelliJIDEA = LogParsingPattern(
-    false,
+    true,
     "IntelliJ IDEA",
     "^([^\\[]+)(\\[[\\s\\d]+])\\s*(\\w*)\\s*-\\s*(\\S*)\\s*-(.+)$",
     "yyyy-MM-dd HH:mm:ss,SSS",
@@ -43,7 +43,7 @@ object DefaultSettingsStoreItems {
     UUID.fromString("8a0e8992-94cb-4f4c-8be2-42b03609626b")
   )
   val TeamCityBuildLog = LogParsingPattern(
-    false,
+    true,
     "TeamCity build log",
     "^\\[([^]]+)](.):\\s*(\\[[^]]+])?(.*)$",
     "HH:mm:ss",
@@ -57,7 +57,7 @@ object DefaultSettingsStoreItems {
   val All = LogParsingPattern(
     true,
     "All",
-    ".*",
+    "^(.*?)\\s(.*?)\\s(.*?)\\s(.*?)\\s(.*?)\\s(.*?)\\s(.*?)$",
     "",
     "",
     -1,
@@ -71,7 +71,17 @@ object DefaultSettingsStoreItems {
 
   val Error = LogHighlightingPattern(
     true,
-    "(?i)error",
+    "^\\s*e(rror)?\\s*$",
+    LogHighlightingAction.HIGHLIGHT_LINE,
+    Color.RED.rgb,
+    null,
+    bold = true,
+    italic = false,
+    showOnStripe = true
+  )
+  val CommonError = LogHighlightingPattern(
+    true,
+    "(\\s|^)(?i)error(\\s|\$)",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color.RED.rgb,
     null,
@@ -81,7 +91,17 @@ object DefaultSettingsStoreItems {
   )
   val Warning = LogHighlightingPattern(
     true,
-    "(?i)warn(ing)?",
+    "^\\s*w(arn(ing)?)?\\s*$",
+    LogHighlightingAction.HIGHLIGHT_LINE,
+    Color(0xff, 0xaa, 0).rgb,
+    null,
+    bold = true,
+    italic = false,
+    showOnStripe = false
+  )
+  val CommonWarning = LogHighlightingPattern(
+    true,
+    "(\\s|^)(?i)warn(ing)?(\\s|\$)",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0xff, 0xaa, 0).rgb,
     null,
@@ -91,7 +111,17 @@ object DefaultSettingsStoreItems {
   )
   val Info = LogHighlightingPattern(
     true,
-    "(?i)info",
+    "^\\s*i(nfo)?\\s*\$",
+    LogHighlightingAction.HIGHLIGHT_LINE,
+    Color(0x3f, 0xbf, 0x3f).rgb,
+    null,
+    bold = false,
+    italic = false,
+    showOnStripe = false
+  )
+  val CommonInfo = LogHighlightingPattern(
+    true,
+    "(\\s|^)(?i)info(\\s|\$)",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0x3f, 0xbf, 0x3f).rgb,
     null,
@@ -107,12 +137,15 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
     fun getInstance() = getService<LogHighlightingSettingsStore>()
     val logger = Logger.getInstance("LogHighlightingSettingsStore")
 
-    const val CURRENT_SETTINGS_VERSION = "7"
+    const val CURRENT_SETTINGS_VERSION = "9"
 
     val cleanState = State(arrayListOf(
       DefaultSettingsStoreItems.Error,
       DefaultSettingsStoreItems.Warning,
-      DefaultSettingsStoreItems.Info
+      DefaultSettingsStoreItems.Info,
+      DefaultSettingsStoreItems.CommonError,
+      DefaultSettingsStoreItems.CommonWarning,
+      DefaultSettingsStoreItems.CommonInfo
     ), arrayListOf(), arrayListOf(
       DefaultSettingsStoreItems.PipeSeparated,
       DefaultSettingsStoreItems.IntelliJIDEA,
@@ -174,35 +207,24 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
       "5" to lambda@{ oldState ->
         val newState = oldState.clone()
 
-        if (newState.patterns.size >= 3 && newState.patterns[0].pattern == "^\\s*w(arn(ing)?)?\\s*\$") {
-          newState.patterns[0] = newState.patterns[0].copy(pattern = "(?i)error")
+        if (newState.patterns.size == 3) {
+          newState.patterns.addAll(arrayListOf(
+            DefaultSettingsStoreItems.CommonError,
+            DefaultSettingsStoreItems.CommonWarning,
+            DefaultSettingsStoreItems.CommonInfo)
+          )
         }
-        if (newState.patterns.size >= 3 && newState.patterns[1].pattern == "^\\s*w(arn(ing)?)?\\s*\$") {
-          newState.patterns[1] = newState.patterns[1].copy(pattern = "(?i)warn(ing)?")
-        }
-        if (newState.patterns.size >= 3 && newState.patterns[2].pattern == "^\\s*i(nfo)?\\s*\$") {
-          newState.patterns[2] = newState.patterns[2].copy(pattern = "(?i)info")
-        }
-
-        newState.version = "6"
-        return@lambda newState
-      },
-      "6" to lambda@{ oldState ->
-        val newState = oldState.clone()
 
         if (newState.parsingPatterns.size == 3) {
-          newState.parsingPatterns[0] = newState.parsingPatterns[0].copy(enabled = false)
-          newState.parsingPatterns[1] = newState.parsingPatterns[1].copy(enabled = false)
-          newState.parsingPatterns[2] = newState.parsingPatterns[2].copy(enabled = false)
           newState.parsingPatterns.add(DefaultSettingsStoreItems.All)
         }
 
         newState.lastAddedDefaultFormat =
           DefaultSettingsStoreItems.ParsingPatternsUUIDs.map { it.toString() }.joinToString(",") { it }
 
-        newState.version = "7"
+        newState.version = "6"
         return@lambda newState
-      }
+      },
     )
   }
 
