@@ -137,7 +137,7 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
     fun getInstance() = getService<LogHighlightingSettingsStore>()
     val logger = Logger.getInstance("LogHighlightingSettingsStore")
 
-    const val CURRENT_SETTINGS_VERSION = "9"
+    const val CURRENT_SETTINGS_VERSION = "6"
 
     val cleanState = State(arrayListOf(
       DefaultSettingsStoreItems.Error,
