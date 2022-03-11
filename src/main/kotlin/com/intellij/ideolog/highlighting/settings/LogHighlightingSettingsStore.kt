@@ -57,7 +57,7 @@ object DefaultSettingsStoreItems {
   val All = LogParsingPattern(
     true,
     "All",
-    "^(.*?)\\s(.*?)\\s(.*?)\\s(.*?)\\s(.*?)\\s(.*?)\\s(.*?)$",
+    "^(.*?)(\\s(.*?))?(\\s(.*?))?(\\s(.*?))?(\\s(.*?))?(\\s(.*?))?(\\s(.*?))?\$",
     "",
     "",
     -1,
@@ -112,7 +112,7 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
     val cleanState = State(arrayListOf(
       DefaultSettingsStoreItems.Error,
       DefaultSettingsStoreItems.Warning,
-      DefaultSettingsStoreItems.Info,
+      DefaultSettingsStoreItems.Info
     ), arrayListOf(), arrayListOf(
       DefaultSettingsStoreItems.PipeSeparated,
       DefaultSettingsStoreItems.IntelliJIDEA,
@@ -174,16 +174,13 @@ class LogHighlightingSettingsStore : PersistentStateComponent<LogHighlightingSet
       "5" to lambda@{ oldState ->
         val newState = oldState.clone()
 
-        if (newState.parsingPatterns.size == 3) {
-          newState.parsingPatterns.add(DefaultSettingsStoreItems.All)
-        }
-
+        newState.parsingPatterns.add(DefaultSettingsStoreItems.All)
         newState.lastAddedDefaultFormat =
           DefaultSettingsStoreItems.ParsingPatternsUUIDs.map { it.toString() }.joinToString(",") { it }
 
         newState.version = "6"
         return@lambda newState
-      },
+      }
     )
   }
 
