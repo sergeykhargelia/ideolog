@@ -91,7 +91,7 @@ object DefaultSettingsStoreItems {
   )
   val Info = LogHighlightingPattern(
     true,
-    "^\\s*i(nfo)?\\s*\$",
+    "^\\s*i(nfo)?\\s*$",
     LogHighlightingAction.HIGHLIGHT_LINE,
     Color(0x3f, 0xbf, 0x3f).rgb,
     null,
