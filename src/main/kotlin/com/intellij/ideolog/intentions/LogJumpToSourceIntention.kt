@@ -23,7 +23,7 @@ import com.intellij.util.indexing.FileBasedIndex
 import gnu.trove.TIntObjectHashMap
 import java.util.*
 
-
+//some comment
 class FileMatch(private val evt: LogEvent) {
   var levelPresent = 0
   var categoryPresent = 0
